@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VitalCheck — by Rohan Vyas</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=DM+Sans:wght@300;400;500;600&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:   #0a0f1e;
+  --navy2:  #111827;
+  --navy3:  #1a2235;
+  --gold:   #f5c842;
+  --gold2:  #e8a800;
+  --gold3:  #fff3b0;
+  --cream:  #fdf6e3;
+  --mint:   #34d399;
+  --rose:   #f87171;
+  --sky:    #60a5fa;
+  --amber:  #fbbf24;
+  --text:   #e8e4d9;
+  --muted:  #8a8fa8;
+  --border: rgba(245,200,66,0.15);
+  --card:   rgba(255,255,255,0.04);
+  --glow:   0 0 40px rgba(245,200,66,0.12);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--navy);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Animated background ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(245,200,66,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 90%, rgba(52,211,153,0.05) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(96,165,250,0.04) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* ── Floating orbs ── */
+.orb {
+  position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0;
+}
+.orb1 { width: 320px; height: 320px; background: rgba(245,200,66,0.08); top: -80px; right: -80px; animation: drift1 12s ease-in-out infinite; }
+.orb2 { width: 250px; height: 250px; background: rgba(52,211,153,0.06); bottom: 100px; left: -60px; animation: drift2 15s ease-in-out infinite; }
+@keyframes drift1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-30px,40px)} }
+@keyframes drift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(40px,-30px)} }
+
+/* ── Hero header ── */
+.hero {
+  position: relative; z-index: 1;
+  padding: 48px 20px 36px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(245,200,66,0.1);
+  border: 1px solid rgba(245,200,66,0.3);
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 16px;
+}
+.hero-badge::before { content: '✦'; font-size: 0.6rem; }
+
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 3.2rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -1px;
+  background: linear-gradient(135deg, #fff 0%, var(--gold) 50%, #fff 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+}
+.hero-tagline {
+  font-size: 0.88rem;
+  color: var(--muted);
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  margin-bottom: 18px;
+}
+
+/* Author chip */
+.author-chip {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: linear-gradient(135deg, rgba(245,200,66,0.12), rgba(245,200,66,0.05));
+  border: 1px solid rgba(245,200,66,0.25);
+  border-radius: 14px;
+  padding: 10px 18px;
+}
+.author-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold2), var(--gold));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--navy);
+  font-family: 'Playfair Display', serif;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(245,200,66,0.3);
+}
+.author-info { text-align: left; }
+.author-name {
+  font-size: 0.9rem; font-weight: 700; color: var(--gold);
+  font-family: 'Playfair Display', serif;
+  line-height: 1.1;
+}
+.author-role { font-size: 0.68rem; color: var(--muted); letter-spacing: 0.5px; }
+
+/* ── Lang toggle ── */
+.lang-bar {
+  display: flex; justify-content: center; gap: 8px;
+  padding: 16px 20px 0;
+  position: relative; z-index: 1;
+}
+.lang-btn {
+  padding: 8px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem; font-weight: 600;
+  cursor: pointer; transition: all 0.25s;
+  letter-spacing: 0.3px;
+}
+.lang-btn.active {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--navy);
+  font-weight: 700;
+  box-shadow: 0 0 16px rgba(245,200,66,0.3);
+}
+
+/* ── Container ── */
+.container { max-width: 480px; margin: 0 auto; padding: 20px 16px 60px; position: relative; z-index: 1; }
+
+/* ── Card ── */
+.card {
+  background: var(--card);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 24px 20px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+.card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245,200,66,0.4), transparent);
+}
+.card:hover { border-color: rgba(245,200,66,0.3); }
+
+.card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem; font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 18px;
+  display: flex; align-items: center; gap: 8px;
+  letter-spacing: 0.2px;
+}
+.card-title-icon {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: rgba(245,200,66,0.12);
+  border: 1px solid rgba(245,200,66,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.95rem;
+}
+
+/* ── Inputs ── */
+.input-group { margin-bottom: 14px; }
+.input-group label {
+  display: block;
+  font-size: 0.75rem; font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+.input-row { display: flex; gap: 10px; }
+.input-row .input-group { flex: 1; }
+
+.inp-wrap { position: relative; }
+.inp {
+  width: 100%;
+  padding: 13px 42px 13px 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1rem; font-weight: 600;
+  color: #fff;
+  background: rgba(255,255,255,0.05);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  -webkit-appearance: none;
+}
+.inp::placeholder { color: rgba(255,255,255,0.2); font-weight: 400; }
+.inp:focus {
+  border-color: var(--gold);
+  background: rgba(245,200,66,0.06);
+  box-shadow: 0 0 0 3px rgba(245,200,66,0.1);
+}
+.inp-suffix {
+  position: absolute; right: 12px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.72rem; font-weight: 700;
+  color: var(--gold2);
+  letter-spacing: 0.5px;
+  pointer-events: none;
+}
+
+/* Gender */
+.gender-row { display: flex; gap: 10px; }
+.gender-btn {
+  flex: 1; padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.gender-btn.active {
+  border-color: var(--gold);
+  background: rgba(245,200,66,0.1);
+  color: var(--gold);
+  box-shadow: 0 0 12px rgba(245,200,66,0.15);
+}
+
+/* ── CTA button ── */
+.calc-btn {
+  width: 100%; padding: 16px;
+  border-radius: 16px; border: none;
+  background: linear-gradient(135deg, var(--gold2) 0%, var(--gold) 50%, #ffe066 100%);
+  color: var(--navy);
+  font-family: 'Playfair Display', serif;
+  font-size: 1.05rem; font-weight: 800;
+  cursor: pointer; letter-spacing: 0.3px;
+  box-shadow: 0 4px 30px rgba(245,200,66,0.4), 0 0 0 0 rgba(245,200,66,0.3);
+  transition: transform 0.15s, box-shadow 0.15s;
+  margin-top: 6px;
+  position: relative; overflow: hidden;
+}
+.calc-btn::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+  transform: translateX(-100%);
+  transition: transform 0.4s;
+}
+.calc-btn:hover::after { transform: translateX(100%); }
+.calc-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 40px rgba(245,200,66,0.5); }
+.calc-btn:active { transform: scale(0.98); }
+
+/* ── Result ── */
+.result-card { display: none; }
+.result-card.show { display: block; animation: fadeUp 0.5s ease forwards; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+.bmi-display {
+  text-align: center; padding: 8px 0 16px;
+}
+.bmi-number {
+  font-family: 'Playfair Display', serif;
+  font-size: 5rem; font-weight: 900;
+  line-height: 1;
+  letter-spacing: -3px;
+  transition: color 0.4s;
+}
+.bmi-label-pill {
+  display: inline-block;
+  padding: 5px 20px;
+  border-radius: 999px;
+  font-size: 0.82rem; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  margin-top: 8px;
+}
+
+/* Scale */
+.scale-wrap { margin: 12px 0 6px; }
+.scale-track {
+  height: 6px; border-radius: 999px;
+  background: linear-gradient(to right, #60a5fa 0%, #34d399 28%, #fbbf24 55%, #f97316 78%, #ef4444 100%);
+  position: relative; overflow: visible;
+}
+.scale-dot {
+  position: absolute; top: 50%;
+  width: 18px; height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  border: 3px solid var(--navy2);
+  box-shadow: 0 0 0 2px currentColor, 0 2px 8px rgba(0,0,0,0.4);
+  transform: translate(-50%, -50%);
+  transition: left 0.6s cubic-bezier(0.34,1.56,0.64,1);
+}
+.scale-labels {
+  display: flex; justify-content: space-between;
+  margin-top: 7px;
+  font-size: 0.65rem; font-weight: 600;
+  color: var(--muted); letter-spacing: 0.3px;
+}
+
+/* Stats grid */
+.stats-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-top: 16px;
+}
+.stat-tile {
+  border-radius: 16px;
+  padding: 14px 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+  position: relative; overflow: hidden;
+}
+.stat-tile::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  border-radius: 2px 2px 0 0;
+}
+.st-walk::before { background: linear-gradient(90deg, #60a5fa, #818cf8); }
+.st-cal::before  { background: linear-gradient(90deg, #fbbf24, #f97316); }
+.st-ideal::before{ background: linear-gradient(90deg, #34d399, #06b6d4); }
+.st-risk::before { background: linear-gradient(90deg, #f87171, #fb923c); }
+
+.stat-icon { font-size: 1.4rem; margin-bottom: 4px; }
+.stat-label {
+  font-size: 0.67rem; font-weight: 700; letter-spacing: 0.8px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 3px;
+}
+.stat-value { font-size: 0.95rem; font-weight: 700; color: #fff; }
+
+/* ── Tips & meals ── */
+.tip-item {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 13px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.tip-item:last-child { border-bottom: none; padding-bottom: 0; }
+.tip-icon-wrap {
+  width: 36px; height: 36px; flex-shrink: 0;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+}
+.tip-body { flex: 1; }
+.tip-text { font-size: 0.87rem; font-weight: 400; color: #c5bfb2; line-height: 1.55; }
+.tip-text strong { color: var(--gold3); font-weight: 700; }
+
+/* Meals */
+.meal-item {
+  display: flex; gap: 12px; align-items: center;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 8px;
+  transition: border-color 0.2s;
+}
+.meal-item:last-child { margin-bottom: 0; }
+.meal-item:hover { border-color: rgba(245,200,66,0.2); }
+.meal-time-badge {
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.5px;
+  color: var(--gold2);
+  background: rgba(245,200,66,0.1);
+  border-radius: 6px;
+  padding: 3px 7px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.meal-emoji { font-size: 1.4rem; flex-shrink: 0; }
+.meal-info { flex: 1; min-width: 0; }
+.meal-name { font-size: 0.87rem; font-weight: 700; color: var(--text); }
+.meal-desc { font-size: 0.76rem; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+
+/* ── Divider ── */
+.section-divider {
+  display: flex; align-items: center; gap: 10px;
+  margin: 4px 0 0;
+}
+.section-divider::before, .section-divider::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245,200,66,0.2), transparent);
+}
+.divider-text { font-size: 0.65rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold2); }
+
+/* ── Footer ── */
+.footer {
+  text-align: center; padding: 20px 0 8px;
+  font-size: 0.75rem; color: var(--muted);
+}
+.footer-brand {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem; font-weight: 800;
+  background: linear-gradient(135deg, var(--gold2), var(--gold));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.footer-heart { color: #f87171; }
+
+/* BMI color states */
+.col-under  { color: #60a5fa; }
+.col-normal { color: #34d399; }
+.col-over   { color: #fbbf24; }
+.col-obese  { color: #f87171; }
+
+.pill-under  { background: rgba(96,165,250,0.15);  color: #93c5fd; border: 1px solid rgba(96,165,250,0.3);  }
+.pill-normal { background: rgba(52,211,153,0.15);  color: #6ee7b7; border: 1px solid rgba(52,211,153,0.3);  }
+.pill-over   { background: rgba(251,191,36,0.15);  color: #fcd34d; border: 1px solid rgba(251,191,36,0.3);  }
+.pill-obese  { background: rgba(248,113,113,0.15); color: #fca5a5; border: 1px solid rgba(248,113,113,0.3); }
+
+/* Number input fix */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+input[type=number] { -moz-appearance: textfield; }
+
+/* Devanagari font fallback */
+.hi-font { font-family: 'Noto Sans Devanagari', 'DM Sans', sans-serif; }
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-badge">Health Intelligence Tool</div>
+  <div class="hero-title">VitalCheck</div>
+  <div class="hero-tagline" id="h-sub">Your personal wellness compass</div>
+  <div class="author-chip">
+    <div class="author-avatar">R</div>
+    <div class="author-info">
+      <div class="author-name">Rohan Vyas</div>
+      <div class="author-role" id="author-role">Health &amp; Wellness App</div>
+    </div>
+  </div>
+</div>
+
+<!-- Lang toggle -->
+<div class="lang-bar">
+  <button class="lang-btn active" onclick="setLang('en')">English</button>
+  <button class="lang-btn" onclick="setLang('hi')">हिंदी</button>
+</div>
+
+<!-- Main container -->
+<div class="container">
+
+  <!-- Input card -->
+  <div class="card">
+    <div class="card-title"><div class="card-title-icon">📐</div><span id="lbl-enter">Your Details</span></div>
+
+    <div class="input-row">
+      <div class="input-group">
+        <label id="lbl-ft">Height — Feet</label>
+        <div class="inp-wrap">
+          <input class="inp" type="number" id="feet" placeholder="5" min="1" max="9">
+          <span class="inp-suffix" id="sfx-ft">ft</span>
+        </div>
+      </div>
+      <div class="input-group">
+        <label id="lbl-in">Inches</label>
+        <div class="inp-wrap">
+          <input class="inp" type="number" id="inches" placeholder="7" min="0" max="11">
+          <span class="inp-suffix" id="sfx-in">in</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label id="lbl-wt">Weight</label>
+      <div class="inp-wrap">
+        <input class="inp" type="number" id="weight" placeholder="65" min="10" max="300">
+        <span class="inp-suffix">kg</span>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label id="lbl-age">Age</label>
+      <div class="inp-wrap">
+        <input class="inp" type="number" id="age" placeholder="30" min="5" max="100">
+        <span class="inp-suffix" id="sfx-yr">yrs</span>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label id="lbl-gen">Gender</label>
+      <div class="gender-row">
+        <button class="gender-btn active" id="btn-male" onclick="selectGender('male')">👨 <span id="g-male">Male</span></button>
+        <button class="gender-btn" id="btn-female" onclick="selectGender('female')">👩 <span id="g-female">Female</span></button>
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calculate()" id="calc-btn-text">Check My Vitals ✦</button>
+  </div>
+
+  <!-- Result card -->
+  <div class="card result-card" id="result-card">
+    <div class="card-title"><div class="card-title-icon">📊</div><span id="lbl-result">Your Vital Score</span></div>
+
+    <div class="bmi-display">
+      <div class="bmi-number" id="bmi-number">—</div>
+      <div class="bmi-label-pill" id="bmi-label">—</div>
+    </div>
+
+    <div class="scale-wrap">
+      <div class="scale-track">
+        <div class="scale-dot" id="scale-dot" style="left:0%; color:#fff"></div>
+      </div>
+      <div class="scale-labels">
+        <span id="sl1">Underweight</span>
+        <span id="sl2">Normal</span>
+        <span id="sl3">Overweight</span>
+        <span id="sl4">Obese</span>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-tile st-walk">
+        <div class="stat-icon">🚶</div>
+        <div class="stat-label" id="tl-walk">Daily Walk</div>
+        <div class="stat-value" id="tv-walk">—</div>
+      </div>
+      <div class="stat-tile st-cal">
+        <div class="stat-icon">🔥</div>
+        <div class="stat-label" id="tl-cal">Calories/Day</div>
+        <div class="stat-value" id="tv-cal">—</div>
+      </div>
+      <div class="stat-tile st-ideal">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-label" id="tl-ideal">Ideal Weight</div>
+        <div class="stat-value" id="tv-ideal">—</div>
+      </div>
+      <div class="stat-tile st-risk">
+        <div class="stat-icon">❤️</div>
+        <div class="stat-label" id="tl-risk">Health Risk</div>
+        <div class="stat-value" id="tv-risk">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Walk tips -->
+  <div class="card result-card" id="walk-card">
+    <div class="card-title"><div class="card-title-icon">🚶</div><span id="lbl-walktips">Movement Plan</span></div>
+    <div id="walk-tips"></div>
+  </div>
+
+  <!-- Diet card -->
+  <div class="card result-card" id="diet-card">
+    <div class="card-title"><div class="card-title-icon">🥗</div><span id="lbl-diet">Vegetarian Meal Plan</span></div>
+    <div id="meal-grid"></div>
+  </div>
+
+  <!-- Health tips -->
+  <div class="card result-card" id="tips-card">
+    <div class="card-title"><div class="card-title-icon">💡</div><span id="lbl-tips">Wellness Tips</span></div>
+    <div id="health-tips"></div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-brand">VitalCheck</div>
+    <div style="margin-top:6px;">Built with <span class="footer-heart">♥</span> by <strong style="color:#e8d5a0;">Rohan Vyas</strong></div>
+    <div style="margin-top:4px; font-size:0.65rem; letter-spacing:0.5px;">Your health, your journey.</div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+let lang = 'en', gender = 'male';
+
+const T = {
+  en: {
+    'h-sub': 'Your personal wellness compass',
+    'author-role': 'Health &amp; Wellness App',
+    'lbl-enter': 'Your Details',
+    'lbl-ft': 'Height — Feet',
+    'lbl-in': 'Inches',
+    'sfx-ft': 'ft', 'sfx-in': 'in', 'sfx-yr': 'yrs',
+    'lbl-wt': 'Weight',
+    'lbl-age': 'Age',
+    'lbl-gen': 'Gender',
+    'g-male': 'Male', 'g-female': 'Female',
+    'calc-btn-text': 'Check My Vitals ✦',
+    'lbl-result': 'Your Vital Score',
+    'sl1':'Underweight','sl2':'Normal','sl3':'Overweight','sl4':'Obese',
+    'tl-walk':'Daily Walk','tl-cal':'Calories/Day','tl-ideal':'Ideal Weight','tl-risk':'Health Risk',
+    'lbl-walktips':'Movement Plan',
+    'lbl-diet':'Vegetarian Meal Plan',
+    'lbl-tips':'Wellness Tips',
+    bmiCats: ['Underweight','Normal Weight','Overweight','Obese'],
+    risks: ['Low','Minimal','Moderate','High'],
+  },
+  hi: {
+    'h-sub': 'आपका व्यक्तिगत स्वास्थ्य सहायक',
+    'author-role': 'स्वास्थ्य ऐप',
+    'lbl-enter': 'अपनी जानकारी भरें',
+    'lbl-ft': 'ऊँचाई — फ़ीट',
+    'lbl-in': 'इंच',
+    'sfx-ft': 'फ़ीट', 'sfx-in': 'इंच', 'sfx-yr': 'साल',
+    'lbl-wt': 'वज़न',
+    'lbl-age': 'उम्र',
+    'lbl-gen': 'लिंग',
+    'g-male': 'पुरुष', 'g-female': 'महिला',
+    'calc-btn-text': 'वाइटल चेक करें ✦',
+    'lbl-result': 'आपका वाइटल स्कोर',
+    'sl1':'कम वज़न','sl2':'सामान्य','sl3':'अधिक वज़न','sl4':'मोटापा',
+    'tl-walk':'रोज़ पैदल','tl-cal':'कैलोरी/दिन','tl-ideal':'आदर्श वज़न','tl-risk':'स्वास्थ्य जोखिम',
+    'lbl-walktips':'व्यायाम योजना',
+    'lbl-diet':'शाकाहारी आहार',
+    'lbl-tips':'स्वास्थ्य सुझाव',
+    bmiCats: ['कम वज़न','सामान्य वज़न','अधिक वज़न','मोटापा'],
+    risks: ['कम','न्यूनतम','मध्यम','उच्च'],
+  }
+};
+
+function setLang(l) {
+  lang = l;
+  document.querySelectorAll('.lang-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&l==='en')||(i===1&&l==='hi')));
+  const isHi = l === 'hi';
+  document.querySelectorAll('.inp, .gender-btn, .calc-btn, .card-title, .stat-label, .stat-value, .tip-text, .meal-name, .meal-desc, .scale-labels span, .footer')
+    .forEach(el => el.classList.toggle('hi-font', isHi));
+  applyLang();
+}
+
+function applyLang() {
+  const t = T[lang];
+  for (const [id, val] of Object.entries(t)) {
+    if (id==='bmiCats'||id==='risks') continue;
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = val;
+  }
+}
+
+function selectGender(g) {
+  gender = g;
+  document.getElementById('btn-male').classList.toggle('active', g==='male');
+  document.getElementById('btn-female').classList.toggle('active', g==='female');
+}
+
+function calculate() {
+  const ft  = parseFloat(document.getElementById('feet').value)||0;
+  const inc = parseFloat(document.getElementById('inches').value)||0;
+  const kg  = parseFloat(document.getElementById('weight').value)||0;
+  const age = parseInt(document.getElementById('age').value)||25;
+  const isEn = lang === 'en';
+
+  if (!ft||!kg) { alert(isEn?'Please enter height and weight.':'कृपया ऊँचाई और वज़न भरें।'); return; }
+
+  const totalIn = ft*12 + inc;
+  const hm = totalIn * 0.0254;
+  const bmi = kg/(hm*hm);
+  const bmiR = Math.round(bmi*10)/10;
+
+  let cat, colCls, pillCls;
+  if (bmi<18.5)      {cat=0;colCls='col-under'; pillCls='pill-under';}
+  else if (bmi<25)   {cat=1;colCls='col-normal';pillCls='pill-normal';}
+  else if (bmi<30)   {cat=2;colCls='col-over';  pillCls='pill-over';}
+  else               {cat=3;colCls='col-obese'; pillCls='pill-obese';}
+
+  // Number
+  const numEl = document.getElementById('bmi-number');
+  numEl.textContent = bmiR;
+  numEl.className = 'bmi-number ' + colCls;
+
+  const lblEl = document.getElementById('bmi-label');
+  lblEl.textContent = T[lang].bmiCats[cat];
+  lblEl.className = 'bmi-label-pill ' + pillCls;
+
+  // Scale dot position: BMI 14-40 → 0-100%
+  const pct = Math.min(100, Math.max(0, ((bmi-14)/26)*100));
+  const dot = document.getElementById('scale-dot');
+  dot.style.left = pct+'%';
+  const dotColors = ['#60a5fa','#34d399','#fbbf24','#f87171'];
+  dot.style.color = dotColors[cat];
+
+  // Ideal (Devine)
+  const base = gender==='male'?50:45.5;
+  const ideal = Math.round((base + 2.3*Math.max(0,totalIn-60))*10)/10;
+  document.getElementById('tv-ideal').textContent = ideal+' kg';
+
+  // Walk
+  const walkMap = isEn
+    ? ['20–30 min','30 min','45–60 min','60–90 min']
+    : ['20–30 मिनट','30 मिनट','45–60 मिनट','60–90 मिनट'];
+  document.getElementById('tv-walk').textContent = walkMap[cat];
+
+  // Calories
+  let bmr = gender==='male'
+    ? 88.36 + 13.4*kg + 4.8*(hm*100) - 5.7*age
+    : 447.6 + 9.2*kg + 3.1*(hm*100) - 4.3*age;
+  const calMult = cat<=1 ? 1.55 : 1.2;
+  document.getElementById('tv-cal').textContent = Math.round(bmr*calMult)+' kcal';
+
+  // Risk
+  document.getElementById('tv-risk').textContent = T[lang].risks[cat];
+
+  // Walk tips
+  const walkTipsEn = [
+    {i:'🌅', t:`<strong>Morning walk</strong> is most effective — aim for ${walkMap[cat]} at a brisk pace (5–6 km/h).`},
+    {i:'👟', t:`Target <strong>10,000 steps daily</strong>. A free pedometer app on your phone works perfectly.`},
+    {i:'🧘', t:`<strong>Stretch for 5 minutes</strong> before and after each walk to prevent muscle soreness.`},
+    {i:'💧', t:`Drink <strong>a glass of water</strong> before heading out. Hydration improves endurance.`},
+    {i:'📈', t:`Add <strong>5 more minutes every week</strong> — steady progression beats intense bursts.`},
+  ];
+  const walkTipsHi = [
+    {i:'🌅', t:`<strong>सुबह की सैर</strong> सबसे असरदार है — ${walkMap[cat]} तेज़ गति से चलें।`},
+    {i:'👟', t:`रोज़ <strong>10,000 कदम</strong> चलने का लक्ष्य रखें। मोबाइल पेडोमीटर ऐप काम आएगा।`},
+    {i:'🧘', t:`चलने से पहले और बाद में <strong>5 मिनट स्ट्रेचिंग</strong> ज़रूर करें।`},
+    {i:'💧', t:`निकलने से पहले <strong>एक गिलास पानी</strong> पिएं — हाइड्रेशन बेहद ज़रूरी है।`},
+    {i:'📈', t:`हर हफ्ते <strong>5 मिनट और बढ़ाएं</strong> — धैर्य से किया बदलाव टिकता है।`},
+  ];
+  const wt = isEn ? walkTipsEn : walkTipsHi;
+  document.getElementById('walk-tips').innerHTML = wt.map(x=>
+    `<div class="tip-item"><div class="tip-icon-wrap">${x.i}</div><div class="tip-body"><div class="tip-text">${x.t}</div></div></div>`
+  ).join('');
+
+  // Meals
+  const mealsEn = [
+    {e:'🌄',badge:'7–8 AM',name:'Breakfast',desc:'Oats porridge with banana & berries • Green tea'},
+    {e:'🍋',badge:'10–11 AM',name:'Mid-Morning',desc:'Buttermilk or coconut water • 5 almonds + 2 walnuts'},
+    {e:'🍽️',badge:'1–2 PM',name:'Lunch',desc:'Dal + 2 roti or brown rice • Seasonal sabzi • Curd & salad'},
+    {e:'🌿',badge:'4–5 PM',name:'Evening Snack',desc:'Sprouts chaat or roasted makhana • 1 seasonal fruit'},
+    {e:'🌙',badge:'7–8 PM',name:'Dinner',desc:'Moong dal khichdi or veg soup • Paneer sabzi • 1 roti'},
+    {e:'🌙',badge:'Bedtime',name:'Night Drink',desc:'Warm turmeric milk (haldi doodh) with a pinch of black pepper'},
+  ];
+  const mealsHi = [
+    {e:'🌄',badge:'सुबह 7–8',name:'नाश्ता',desc:'ओट्स दलिया + केला और फल • हरी चाय'},
+    {e:'🍋',badge:'सुबह 10–11',name:'मध्य-सुबह',desc:'छाछ या नारियल पानी • 5 बादाम + 2 अखरोट'},
+    {e:'🍽️',badge:'दोपहर 1–2',name:'दोपहर का खाना',desc:'दाल + 2 रोटी या ब्राउन चावल • सब्ज़ी • दही और सलाद'},
+    {e:'🌿',badge:'शाम 4–5',name:'शाम का नाश्ता',desc:'स्प्राउट्स चाट या भुना मखाना • 1 मौसमी फल'},
+    {e:'🌙',badge:'रात 7–8',name:'रात का खाना',desc:'मूंग दाल खिचड़ी या सब्ज़ी सूप • पनीर सब्ज़ी • 1 रोटी'},
+    {e:'🌙',badge:'सोने से पहले',name:'रात का पेय',desc:'गर्म हल्दी वाला दूध + चुटकी भर काली मिर्च'},
+  ];
+  const ml = isEn ? mealsEn : mealsHi;
+  document.getElementById('meal-grid').innerHTML = ml.map(m=>
+    `<div class="meal-item"><div style="font-size:1.4rem">${m.e}</div><div class="meal-info"><div class="meal-name">${m.name} <span class="meal-time-badge">${m.badge}</span></div><div class="meal-desc">${m.desc}</div></div></div>`
+  ).join('');
+
+  // Health tips
+  const htEn = [
+    {i:'💧',t:`Drink <strong>8–10 glasses of water</strong> daily. Begin with warm lemon water each morning.`},
+    {i:'😴',t:`Prioritise <strong>7–8 hours of sleep</strong>. Sleep deprivation raises cortisol and causes weight gain.`},
+    {i:'🧘',t:`Practice <strong>10 minutes of yoga or deep breathing</strong> daily to reduce stress hormones.`},
+    {i:'🚫',t:`Cut out <strong>sugary beverages, fried foods, and packaged snacks</strong> — they are the silent saboteurs.`},
+    {i:'🍽️',t:`Eat <strong>slowly and mindfully</strong>. Chew each bite well and stop when 80% full.`},
+  ];
+  const htHi = [
+    {i:'💧',t:`रोज़ <strong>8–10 गिलास पानी</strong> पिएं। हर सुबह गर्म नींबू पानी से शुरुआत करें।`},
+    {i:'😴',t:`<strong>7–8 घंटे की नींद</strong> ज़रूरी है। नींद कम होने से वज़न बढ़ता है।`},
+    {i:'🧘',t:`रोज़ <strong>10 मिनट योग या प्राणायाम</strong> करें — तनाव कम होगा।`},
+    {i:'🚫',t:`<strong>मीठे पेय, तले खाने और पैकेटबंद स्नैक्स</strong> से दूर रहें।`},
+    {i:'🍽️',t:`<strong>धीरे-धीरे और ध्यान से खाएं</strong>। 80% भूख लगने पर रुकें।`},
+  ];
+  const ht = isEn ? htEn : htHi;
+  document.getElementById('health-tips').innerHTML = ht.map(x=>
+    `<div class="tip-item"><div class="tip-icon-wrap">${x.i}</div><div class="tip-body"><div class="tip-text">${x.t}</div></div></div>`
+  ).join('');
+
+  ['result-card','walk-card','diet-card','tips-card'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('show');
+    void el.offsetWidth;
+    el.classList.add('show');
+  });
+  setTimeout(()=>document.getElementById('result-card').scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+
+applyLang();
+</script>
+</body>
+</html>
